@@ -24,3 +24,6 @@ main
 # Build output
 SaSSHimi
 SaSSHimi.exe
+
+# Go dependencies
+vendor/
