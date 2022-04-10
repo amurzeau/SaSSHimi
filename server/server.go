@@ -95,6 +95,9 @@ func (t *tunnel) getUsername() string {
 
 func (t *tunnel) getRemoteExecutable() string {
 	remoteExecutable := t.viper.GetString("RemoteExecutable")
+	if remoteExecutable == "" {
+		remoteExecutable, _ = os.Executable()
+	}
 	utils.Logger.Debug("Remote Executable:", remoteExecutable)
 	return remoteExecutable
 }
@@ -138,16 +141,9 @@ func (t *tunnel) uploadForwarder() error {
 		return errors.New("Failed to create session: " + err.Error())
 	}
 
-	remoteExecutable := t.getRemoteExecutable()
-	var selfFilePath string
+	var remoteExecutable string = t.getRemoteExecutable()
 
-	if remoteExecutable == "" {
-		selfFilePath, _ = os.Executable()
-	} else {
-		selfFilePath = remoteExecutable
-	}
-
-	selfFile, err := os.Open(selfFilePath)
+	selfFile, err := os.Open(remoteExecutable)
 	session.Stdin = selfFile
 
 	if err != nil {
