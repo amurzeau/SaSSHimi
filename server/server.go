@@ -102,6 +102,15 @@ func (t *tunnel) getRemoteExecutable() string {
 	return remoteExecutable
 }
 
+func (t *tunnel) getRemoteAgentPath() string {
+	remoteAgentPath := t.viper.GetString("RemoteAgentPath")
+	if remoteAgentPath == "" {
+		remoteAgentPath = "."
+	}
+	utils.Logger.Debug("Remote install path:", remoteAgentPath)
+	return remoteAgentPath
+}
+
 func (t *tunnel) getPassword() string {
 	password := t.viper.GetString("Password")
 	if password == "" {
@@ -134,7 +143,7 @@ func (t *tunnel) getPublicKey() ssh.Signer {
 	return signer
 }
 
-func (t *tunnel) uploadForwarder() error {
+func (t *tunnel) uploadForwarder(remoteAgentPath string) error {
 	session, err := t.sshClient.NewSession()
 	defer session.Close()
 	if err != nil {
@@ -150,7 +159,9 @@ func (t *tunnel) uploadForwarder() error {
 		return errors.New("Failed to open current binary " + err.Error())
 	}
 
-	err = session.Run("cat > ./.daemon && chmod +x ./.daemon")
+	remoteAgentPathEscaped := utils.EscapeBashArgument(remoteAgentPath)
+	command := fmt.Sprintf("cd %s && cat > ./.daemon && chmod +x ./.daemon", remoteAgentPathEscaped)
+	err = session.Run(command)
 
 	return err
 }
@@ -208,7 +219,8 @@ func (t *tunnel) openTunnel(verboseLevel int) error {
 
 	defer t.sshClient.Close()
 
-	err = t.uploadForwarder()
+	remoteAgentPath := t.getRemoteAgentPath()
+	err = t.uploadForwarder(remoteAgentPath)
 	if err != nil {
 		return errors.New("Failed to upload forwarder " + err.Error())
 	}
@@ -237,14 +249,15 @@ func (t *tunnel) openTunnel(verboseLevel int) error {
 
 	utils.Logger.Notice("SSH Tunnel Open")
 
-	var runCommand = "./.daemon agent %s"
 	var commandOps = ""
 
 	if verboseLevel != 0 {
 		commandOps = "-" + strings.Repeat("v", verboseLevel)
 	}
 
-	t.sshSession.Run(fmt.Sprintf(runCommand, commandOps))
+	remoteAgentPathEscaped := utils.EscapeBashArgument(remoteAgentPath)
+	var runCommand = fmt.Sprintf("cd %s && ./.daemon agent %s", remoteAgentPathEscaped, commandOps)
+	t.sshSession.Run(runCommand)
 
 	t.ChannelOpen = false
 	t.NotifyClosure <- struct{}{}

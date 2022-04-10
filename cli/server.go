@@ -24,6 +24,7 @@ import (
 
 var idFile string
 var remoteExecutable string
+var remoteAgentPath string
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
@@ -52,6 +53,7 @@ var serverCmd = &cobra.Command{
 		subv.SetDefault("RemoteHost", remoteHost)
 		subv.SetDefault("PrivateKey", idFile)
 		subv.SetDefault("RemoteExecutable", remoteExecutable)
+		subv.SetDefault("RemoteAgentPath", remoteAgentPath)
 
 		server.Run(subv, bindAddress, verboseLevel)
 	},
@@ -62,5 +64,6 @@ func init() {
 
 	serverCmd.Flags().StringVar(&bindAddress, "bind", "127.0.0.1:1080", "Set local bind address and port")
 	serverCmd.Flags().StringVarP(&idFile, "identity_file", "i", "", "Path to private key")
-	serverCmd.Flags().StringVarP(&remoteExecutable, "remote_executable", "", "", "Path to SaSSHimi to run on remote machine")
+	serverCmd.Flags().StringVarP(&remoteExecutable, "remote_executable", "", "", "Path to SaSSHimi executable to be run on the remote machine")
+	serverCmd.Flags().StringVarP(&remoteAgentPath, "remote_agent_path", "", "", "Path on remote machine where to run SaSSHimi agent")
 }
