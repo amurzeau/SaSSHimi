@@ -330,7 +330,7 @@ func RunTransparent(transparentCmd []string, bindAddress string) {
 	for tunnel.ChannelOpen {
 		conn, err := ln.Accept()
 		if err != nil {
-			utils.Logger.Fatalf("Error in conncetion accept: %s", err.Error())
+			utils.Logger.Fatalf("Error in connection accept: %s", err.Error())
 			continue
 		}
 
